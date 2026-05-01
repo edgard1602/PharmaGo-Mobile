@@ -66,7 +66,7 @@ class SignalementScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // ── Type d'erreur ──────────────────────────────────────
-            Text("Type d'erreur", style: AppTypography.headingSmall),
+            const Text("Type d'erreur", style: AppTypography.headingSmall),
             const SizedBox(height: 12),
 
             ...TypeSignalement.values.map(
@@ -81,9 +81,9 @@ class SignalementScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // ── Description ────────────────────────────────────────
-            Text('Description', style: AppTypography.headingSmall),
+            const Text('Description', style: AppTypography.headingSmall),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Décrivez le problème avec plus de détails',
               style: AppTypography.bodyMedium,
             ),
@@ -167,21 +167,21 @@ class SignalementScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle_rounded,
               color: AppColors.primary,
               size: 56,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'Merci pour votre signalement !',
               style: AppTypography.headingSmall,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Nous examinerons les informations et corrigerons si nécessaire.',
               style: AppTypography.bodyMedium,
