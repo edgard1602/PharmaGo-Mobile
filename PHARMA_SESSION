@@ -1,0 +1,87 @@
+# PharmaGo Mobile — Résumé de session
+
+## Stack technique
+
+| Catégorie | Choix | Raison |
+|---|---|---|
+| Framework | Flutter 3.x / Dart 3.x | - |
+| State management | Riverpod 2.6.1 (StateNotifierProvider) | Riverpod 3.x trop récent, generator 4.x encore en dev |
+| HTTP | Dio 5.4.3 | Interceptors, BaseOptions, gestion d'erreur précise |
+| Navigation | go_router 14.x | Router officiel Flutter, deep links |
+| Géoloc | geolocator 13.x | - |
+| Cache offline | shared_preferences 2.3.x | Données simples, pas besoin de Hive/Isar pour le MVP |
+| Animations | flutter_animate 4.5.x | Léger, adapté Android entrée de gamme |
+| Skeleton | shimmer 3.x | - |
+| Partage | share_plus 12.0.1 | v10.3.4 n'existait pas, v12 est la dernière stable |
+
+## Architecture
+
+Pattern **feature-first** avec séparation stricte des responsabilités :
+
+```
+lib/
+├── core/           # theme, router, réseau, erreurs, constantes
+├── features/
+│   ├── pharmacies/ # model, repository, provider, screen, widget
+│   ├── signalements/ # model, repository, provider, screen
+│   └── splash/     # screen
+└── shared/         # provider, service, widget réutilisables
+```
+
+## Décisions d'architecture
+
+- **Modèles immutables** avec `==` / `hashCode` overridés → Riverpod détecte les vrais changements
+- **Repository pattern** → l'UI ne sait pas si les données viennent du réseau ou du cache
+- **Fallback offline silencieux** dans `_fetchAndCache()` → si réseau KO, retourne le cache sans que le provider le gère
+- **SharedPreferences injecté via Riverpod override** dans `main()` → testable avec mock
+- **sealed class AppException** → pattern matching exhaustif, le compilateur avertit si un cas est oublié
+- **FutureProvider** pour le détail (lecture seule) vs **StateNotifierProvider** pour la liste (méthodes + état complexe)
+- **`fromJson` manuel** plutôt que freezed/json_serializable → modèle stable à ~10 champs, pas besoin de code gen pour le MVP
+
+## Features implémentées
+
+- [x] `feature/pharmacie-model` — `Pharmacie`, `Signalement`, repositories, providers de base
+- [x] `feature/pharmacie-list` — `LocationService`, `PharmacieListNotifier`, écran liste, skeleton loader, bandeau offline, filtre quartier
+- [x] `feature/pharmacie-detail` — écran détail, badge DE GARDE animé, 3 boutons d'action (Appeler / WhatsApp / Itinéraire), bouton Signaler
+- [x] `feature/splash` — splash screen animé, navigation auto vers `/pharmacies`
+- [x] `feature/signalement` — formulaire avec sélection type + description, feedback succès/erreur
+- [x] `chore/readme-docker` — README complet
+
+## Workflow Git appliqué
+
+```
+feature/* → develop (merge local) → main (Pull Request GitHub)
+```
+Conventions de commit : `feat(scope):`, `fix(scope):`, `chore(scope):`
+
+## Problèmes rencontrés et solutions
+
+| Problème | Cause | Solution |
+|---|---|---|
+| `uri_does_not_exist` sur tous les packages | `pubspec.yaml` mal sauvegardé, dépendances absentes | Réécriture complète du pubspec + `flutter pub get` |
+| `share_plus ^10.3.4` introuvable | Version inexistante sur pub.dev | Mise à jour vers `^12.0.1` |
+| `riverpod_generator` incompatible avec `custom_lint` | Conflit de versions sur `_macros` SDK | `riverpod_generator: ^2.6.5` + `custom_lint: ^0.7.5` |
+| `flutter_lints` dupliqué dans pubspec | Copier-coller | Suppression du doublon |
+| `pharmacie_liste_screen.dart` vs `pharmacie_list_screen.dart` | Typo dans le nom de fichier | Renommage via PowerShell |
+| `CardTheme` → `CardThemeData` | API Flutter mise à jour | Remplacement du type |
+| `_BadgeGardeAnimé` — caractère accentué interdit | Dart n'accepte pas les accents dans les identifiants | Renommé en `_BadgeGardeAnime` |
+| Commits sur `develop` au lieu de `feature/*` | Oubli de créer la branche avant de coder | Création de la branche a posteriori avec `git branch feature/xxx` |
+
+## Ce qui est en cours
+
+- [ ] Test sur appareil Android physique (Android Studio non installable sur le poste)
+- [ ] Vérification du rendu visuel réel
+
+## Roadmap post-MVP
+
+- [ ] Tests unitaires (repository) et widget tests
+- [ ] `PharmacieDetailScreen` — carte Google Maps intégrée
+- [ ] Notifications push pour changements de garde
+- [ ] `StorageService` et `ShareService` dans `shared/service/` (fichiers créés mais vides)
+- [ ] Marketplace pharmacies partenaires (PharmaGo V2)
+
+## Backend
+
+- **URL prod** : `https://phramago-backend-production.up.railway.app`
+- **Swagger** : `https://phramago-backend-production.up.railway.app/swagger-ui.html`
+- **Stack** : Java / Spring Boot, déployé sur Railway
